@@ -7,6 +7,7 @@ services:
       - "8000:8000"
     volumes:
       - .:/code
+      # - ./certs:/certs
     depends_on:
       db:
         condition: service_healthy
@@ -19,6 +20,26 @@ services:
       sh -c "python manage.py migrate &&
              python manage.py runserver 0.0.0.0:8000"
   
+  make-migrations:
+    build: .
+    command: python manage.py makemigrations
+    volumes:
+      - .:/code
+    depends_on:
+      - db
+    profiles:
+      - tasks
+
+  migrate:
+    build: .
+    command: python manage.py migrate
+    volumes:
+      - .:/code
+    depends_on:
+      - db
+    profiles:
+      - tasks
+
   db:
     image: postgres:14
     volumes:
