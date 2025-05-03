@@ -1,0 +1,78 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.log
+*.sqlite3
+
+# Virtual environments
+.env/
+.venv/
+venv/
+ENV/
+
+# Django static/media files
+/static/
+staticfiles/
+media/
+
+# Django migrations (optional to ignore per app)
+/**/migrations/
+!*/migrations/__init__.py
+
+# Secrets
+.env
+*.env
+
+# Docker
+*.pid
+docker-compose.override.yml
+docker-compose*.log
+docker-compose*.bak
+docker-compose*.yml~
+
+# VSCode / IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node/npm (if used for frontend)
+node_modules/
+npm-debug.log
+
+# macOS
+.DS_Store
+
+# SSL certs
+nginx/certs/
+*.pem
+*.key
+
+# Nginx logs or temporary files
+nginx/logs/
+nginx/*.bak
+
+# Postgres
+postgres_data/
+*.sql
+*.dump
+
+
+
+
+# Ignore contents of staticfiles/, but keep the folder
+staticfiles/*
+!staticfiles/.gitkeep
+
+# Ignore contents of media/, but keep the folder
+media/*
+!media/.gitkeep
+
+# Ignore contents of nginx/certs/, but keep the folder
+nginx/certs/*
+!nginx/certs/.gitkeep
+
+# Ignore contents of postgres_data/, but keep the folder
+postgres_data/*
+!postgres_data/.gitkeep

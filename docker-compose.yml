@@ -4,10 +4,11 @@ services:
   web:
     build: .
     ports:
-      - "8000:8000"
+      - "8000:8000"  # Exposes Django web service on port 8000
     volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/certs:/etc/nginx/certs
       - .:/code
-      # - ./certs:/certs
     depends_on:
       db:
         condition: service_healthy
@@ -18,12 +19,27 @@ services:
       - DB_PASSWORD=postgres
     command: >
       sh -c "python manage.py migrate &&
-             python manage.py runserver 0.0.0.0:8000"
-  
+            python manage.py collectstatic --noinput &&
+            python manage.py runserver 0.0.0.0:8000"
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"    # Exposes nginx to port 80 (HTTP)
+      - "443:443"  # Exposes nginx to port 443 (HTTPS)
+    depends_on:
+      - web
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/certs:/etc/nginx/certs
+      - .:/code
+
   make-migrations:
     build: .
     command: python manage.py makemigrations
     volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/certs:/etc/nginx/certs
       - .:/code
     depends_on:
       - db
@@ -34,6 +50,8 @@ services:
     build: .
     command: python manage.py migrate
     volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/certs:/etc/nginx/certs
       - .:/code
     depends_on:
       - db
@@ -52,7 +70,6 @@ services:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       retries: 5
-
 
 volumes:
   postgres_data:
