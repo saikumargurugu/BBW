@@ -11,6 +11,8 @@ __pycache__/
 venv/
 ENV/
 
+.env.local
+
 # Django static/media files
 /static/
 staticfiles/
