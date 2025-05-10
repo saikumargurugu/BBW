@@ -1,27 +1,23 @@
-version: '3.9'
 
 services:
   web:
     build: .
     ports:
-      - "8000:8000"  # Exposes Django web service on port 8000
+      - "8000:8000"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./nginx/certs:/etc/nginx/certs
       - .:/code
+    env_file:
+      - .env
     depends_on:
       db:
         condition: service_healthy
-      
-    # environment:
-    #   - DB_HOST=db
-    #   - DB_NAME=pg_bd
-    #   - DB_USER=postgres
-    #   - DB_PASSWORD=sai@2021
     command: >
       sh -c "python manage.py migrate &&
             python manage.py collectstatic --noinput &&
             python manage.py runserver 0.0.0.0:8000"
+
 
   nginx:
     image: nginx:latest
@@ -61,12 +57,14 @@ services:
 
   db:
     image: postgres:14
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     env_file:
       - .env
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U bbw_pga"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       retries: 5
 
