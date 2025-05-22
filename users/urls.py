@@ -1,7 +1,6 @@
 # users/urls.py
 from django.urls import path
-from .views import RegisterView
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+# from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 # urlpatterns = [
 #     path('register/', RegisterView.as_view(), name='register'),
@@ -10,7 +9,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 # ]
 
 from django.urls import path
-from .views import RegisterView, LoginView
+# from .views import RegisterView, LoginView
+from users.views import RegisterView, LoginView
 
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
