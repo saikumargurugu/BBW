@@ -13,6 +13,8 @@ ENV/
 
 .env.local
 
+firebase_config.js
+firebase_credentials.json
 # Django static/media files
 /static/
 staticfiles/

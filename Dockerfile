@@ -10,7 +10,9 @@ WORKDIR /code
 
 # Install dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt && \
+    python -m pip install firebase-admin && \
+    python -m pip install Pillow
 
 # Copy project files
 COPY . .

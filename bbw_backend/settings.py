@@ -17,6 +17,10 @@ from datetime import timedelta
 
 import sys
 
+from bbw_backend.firebase import initialize_firebase
+# import firebase_admin
+# from firebase_admin import credentials
+
 
 # Load environment variables from .env file
 load_dotenv()
@@ -43,10 +47,14 @@ sys.path.append(BASE_DIR)
 DEBUG = True
 
 ALLOWED_HOSTS = []
+# initialize_firebase()
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
+# FIREBASE_CREDENTIALS = os.getenv("FIREBASE_CREDENTIALS")
+# cred = credentials.Certificate(FIREBASE_CREDENTIALS)
+# firebase_admin.initialize_app(cred)
 
 # Application definition
 
@@ -70,7 +78,8 @@ INSTALLED_APPS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        # 'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'users.authentication.FirebaseAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
