@@ -23,3 +23,4 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.orgnisations.set(orgnisations)
         
         return user
+    

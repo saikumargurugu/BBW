@@ -35,7 +35,7 @@ if not SECRET_KEY:
 # Add the project root to PYTHONPATH
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(BASE_DIR)
-
+initialize_firebase()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 
 # Load .env file (only needed for local development, not in Docker)

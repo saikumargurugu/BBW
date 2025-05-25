@@ -1,27 +1,21 @@
 from django.shortcuts import render
 
-from rest_framework import generics
-from .serializers import RegisterSerializer
-from rest_framework.permissions import AllowAny
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
-from rest_framework.mixins import CreateModelMixin
+from rest_framework import generics, mixins
 from rest_framework.generics import GenericAPIView
+from rest_framework.mixins import CreateModelMixin
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import authenticate
 from django.core.mail import send_mail
 from django.utils.crypto import get_random_string
-
+from firebase_admin import auth
+from firebase_admin.exceptions import FirebaseError
 from .models import Users
 from .serializers import RegisterSerializer
+import os  # Import os to access environment variables
 
 
-class FirebaseAuthView(GenericAPIView):
+class FirebaseAuthView(generics.GenericAPIView):
     def post(self, request):
         id_token = request.data.get("idToken")
         try:
@@ -33,7 +27,7 @@ class FirebaseAuthView(GenericAPIView):
             return Response({"error": str(e)}, status=401)
 
 
-class UserManagementView(CreateModelMixin, GenericAPIView):
+class UserManagementView(mixins.CreateModelMixin, generics.GenericAPIView):
     """
     View to handle user registration and deletion.
     """
@@ -60,25 +54,24 @@ class UserManagementView(CreateModelMixin, GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             # Save the user in the database
-            user = serializer.save()
 
             # Register the user in Firebase
             try:
-                from firebase_admin import auth
-                firebase_user = auth.create_user(
-                    email=user.email,
-                    password=temp_password,
-                    display_name=user.username,
-                )
-                user.firebase_uid = firebase_user.uid  # Save Firebase UID in the database
-                user.save()
-                print(f"Firebase user created: {firebase_user.uid}")
-            except Exception as e:
-                print(f"Error creating Firebase user: {e}")
-                return Response(
-                    {"error": "Failed to register user in Firebase."},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                )
+                user = serializer.save()
+            except FirebaseError as e:
+                if e.code == "EMAIL_EXISTS":
+                    # Handle the case where the email already exists in Firebase
+                    print(f"Firebase user already exists for email: {user.email}")
+                    return Response(
+                        {"error": "The email is already registered in Firebase."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                else:
+                    print(f"Error creating Firebase user: {e}")
+                    return Response(
+                        {"error": "Failed to register user in Firebase."},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    )
 
             # Send OTP or temporary password to the user's email
             send_mail(
@@ -156,3 +149,54 @@ class LoginView(CreateModelMixin, GenericAPIView):
             }, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class SignUpView(mixins.CreateModelMixin, generics.GenericAPIView):
+    """
+    View to handle user registration using generic views and mixins.
+    """
+    queryset = Users.objects.all()
+    serializer_class = RegisterSerializer
+    permission_classes = [AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        """
+        Handle user registration.
+        """
+        # Generate a temporary password
+        temp_password = get_random_string(length=8)
+
+        # Add the temporary password to the request data
+        request.data['password'] = temp_password
+
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+
+            try:
+                # Save the user in the database
+                # Register the user in Firebase
+                user = serializer.save()
+            except Exception as e:
+                print(f"Error creating Firebase user: {e}")
+                return Response(
+                    {"error": "Failed to register user in Firebase."},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+
+            # Get the sender email from environment variables
+            from_email = os.getenv("FROM_EMAIL", "default_email@example.com")  # Default value if not set
+
+            # Send OTP or temporary password to the user's email
+            send_mail(
+                subject="Your Temporary Password",
+                message=f"Your temporary password is {temp_password}. Please use this to log in.",
+                from_email=from_email,
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+
+            return Response(
+                {"message": "User registered successfully. Temporary password sent to email.", "user_id": user.id},
+                status=status.HTTP_201_CREATED,
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
