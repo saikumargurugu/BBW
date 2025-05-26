@@ -185,6 +185,26 @@ class SignUpView(mixins.CreateModelMixin, generics.GenericAPIView):
 
             # Get the sender email from environment variables
             from_email = os.getenv("FROM_EMAIL", "default_email@example.com")  # Default value if not set
+            address_data = request.data.get("address", {})
+            street = address_data.get("street", "Default Street")
+            city = address_data.get("city", "Default City")
+            state = address_data.get("state", "Default State")
+            country = address_data.get("country", "Default Country")
+            postal_code = address_data.get("postal_code", "000000")
+            is_home = address_data.get("is_home", True)
+            is_postal = address_data.get("is_postal", True)
+
+            # Create a UserAddress instance
+            UserAddress.objects.create(
+                user=user,
+                street=street,
+                city=city,
+                state=state,
+                country=country,
+                postal_code=postal_code,
+                is_home=is_home,
+                is_postal=is_postal,
+            )
 
             # Send OTP or temporary password to the user's email
             send_mail(
