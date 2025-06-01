@@ -73,8 +73,11 @@ INSTALLED_APPS = [
     # // Third-party apps
     'rest_framework',
     'rest_framework_simplejwt',
-
+    'corsheaders',
 ]
+
+
+
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -100,6 +103,7 @@ SIMPLE_JWT = {
 
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -112,7 +116,16 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'bbw_backend.urls'
 
 # // Emao; sends
+# CORS Configuration
+CORS_ALLOWED_ORIGINS = [
+    os.getenv("FRONT_END_URL", "http://localhost:3000"),  # Default to localhost:3000
+    os.getenv("ADMIN_FRONT_END_URL", "http://localhost:5173"),  # Default to localhost:5173
+]
 
+CORS_ALLOW_CREDENTIALS = True
+
+# Optional: Allow credentials (if needed)
+CORS_ALLOW_CREDENTIALS = True
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.getenv('EMAIL_HOST')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))  # Default to 587 if not set
@@ -127,6 +140,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                "django.template.context_processors.debug",
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',

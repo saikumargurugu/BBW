@@ -6,13 +6,21 @@ from rest_framework.mixins import CreateModelMixin
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMultiAlternatives
+from django.template.loader import render_to_string
 from django.utils.crypto import get_random_string
 from firebase_admin import auth
 from firebase_admin.exceptions import FirebaseError
-from .models import Users
+from django.contrib.auth import get_user_model
+from rest_framework.permissions import AllowAny
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from users.models import Users, UserAddress
 from .serializers import RegisterSerializer
 import os  # Import os to access environment variables
+from rest_framework.views import APIView
+
+Users = get_user_model()
 
 
 class FirebaseAuthView(generics.GenericAPIView):
@@ -77,7 +85,7 @@ class UserManagementView(mixins.CreateModelMixin, generics.GenericAPIView):
             send_mail(
                 subject="Your Temporary Password",
                 message=f"Your temporary password is {temp_password}. Please use this to log in.",
-                from_email="your_email@example.com",  # Replace with your email
+                from_email= os.getenv("FROM_EMAIL", "default_email@example.com"),  # Replace with your email
                 recipient_list=[user.email],
                 fail_silently=False,
             )
@@ -129,26 +137,58 @@ class UserManagementView(mixins.CreateModelMixin, generics.GenericAPIView):
             )
 
 
-class LoginView(CreateModelMixin, GenericAPIView):
+class LoginView(APIView):
     """
-    View to handle user login and return JWT tokens using mixins.
+    View to handle user login using Firebase ID tokens and return JWT tokens.
     """
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
-        username = request.data.get('username')
-        password = request.data.get('password')
+        id_token = request.data.get("idToken")
 
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            # Generate JWT tokens
+        if not id_token:
+            return Response(
+                {"error": "ID token is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            # Verify the Firebase ID token
+            decoded_token = auth.verify_id_token(id_token)
+            uid = decoded_token.get("uid")
+            email = decoded_token.get("email")
+
+            # Check if the user exists in the database
+            try:
+                user = Users.objects.get(email=email)
+            except Users.DoesNotExist:
+                return Response(
+                    {"error": "User does not exist."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+            # Generate JWT tokens for the user
             refresh = RefreshToken.for_user(user)
-            return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-            }, status=status.HTTP_200_OK)
-        else:
-            return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                {
+                    "message": "Login successful",
+                    "refresh": str(refresh),
+                    "access": str(refresh.access_token),
+                },
+                status=status.HTTP_200_OK,
+            )
+        except FirebaseError as e:
+            print(f"Firebase error: {e}")
+            return Response(
+                {"error": "Invalid ID token."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        except Exception as e:
+            print(f"Error: {e}")
+            return Response(
+                {"error": "An unexpected error occurred."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class SignUpView(mixins.CreateModelMixin, generics.GenericAPIView):
@@ -171,32 +211,120 @@ class SignUpView(mixins.CreateModelMixin, generics.GenericAPIView):
 
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-
             try:
                 # Save the user in the database
-                # Register the user in Firebase
                 user = serializer.save()
-            except Exception as e:
-                print(f"Error creating Firebase user: {e}")
+
+                # Extract address details from the request
+                address_data = request.data.get("address", {})
+                street = address_data.get("street", "Default Street")
+                city = address_data.get("city", "Default City")
+                state = address_data.get("state", "Default State")
+                country = address_data.get("country", "Default Country")
+                postal_code = address_data.get("postal_code", "000000")
+                is_home = address_data.get("is_home", True)
+                is_postal = address_data.get("is_postal", True)
+
+                # Create a UserAddress instance
+                UserAddress.objects.create(
+                    user=user,
+                    street=street,
+                    city=city,
+                    state=state,
+                    country=country,
+                    postal_code=postal_code,
+                    is_home=is_home,
+                    is_postal=is_postal,
+                )
+
+                # Send OTP or temporary password to the user's email
+                from_email = os.getenv("FROM_EMAIL", "default_email@example.com")
+                send_mail(
+                    subject="Your Temporary Password",
+                    message=f"Your temporary password is {temp_password}. Please use this to log in.",
+                    from_email=from_email,
+                    recipient_list=[user.email],
+                    fail_silently=False,
+                )
+
+                # Return a 200 OK response
                 return Response(
-                    {"error": "Failed to register user in Firebase."},
+                    {"message": "User registered successfully. Temporary password sent to email.", "user_id": user.id},
+                    status=status.HTTP_200_OK,
+                )
+            except Exception as e:
+                print(f"Error creating user: {e}")
+                return Response(
+                    {"error": "Failed to register user."},
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 )
 
-            # Get the sender email from environment variables
-            from_email = os.getenv("FROM_EMAIL", "default_email@example.com")  # Default value if not set
+        # If serializer is not valid, return a 400 Bad Request response
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-            # Send OTP or temporary password to the user's email
-            send_mail(
-                subject="Your Temporary Password",
-                message=f"Your temporary password is {temp_password}. Please use this to log in.",
-                from_email=from_email,
-                recipient_list=[user.email],
-                fail_silently=False,
+
+class ForgotPasswordView(APIView):
+    """
+    API to handle forgot password functionality by sending a password reset email via Firebase.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        """
+        Handle forgot password requests.
+        """
+        email = request.data.get("email")
+
+        if not email:
+            return Response(
+                {"error": "Email is required."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
+
+        try:
+            # Check if the user exists in the database
+            if not Users.objects.filter(email=email).exists():
+                return Response(
+                    {"error": "User with this email does not exist."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+            # Generate the password reset link using Firebase
+            reset_link = auth.generate_password_reset_link(email)
+
+            # Render the HTML email template
+            subject = "Reset Your Password"
+            from_email = os.getenv("FROM_EMAIL", "default_email@example.com")
+            context = {
+                "reset_link": reset_link,
+                "email": email,
+            }
+            html_content = render_to_string("emails/reset_password.html", context)
+            text_content = f"Click the link below to reset your password:\n\n{reset_link}"
+
+            # Send the email
+            email_message = EmailMultiAlternatives(
+                subject=subject,
+                body=text_content,
+                from_email=from_email,
+                to=[email],
+            )
+            email_message.attach_alternative(html_content, "text/html")
+            email_message.send()
 
             return Response(
-                {"message": "User registered successfully. Temporary password sent to email.", "user_id": user.id},
-                status=status.HTTP_201_CREATED,
+                {"message": "Password reset email sent successfully."},
+                status=status.HTTP_200_OK,
             )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except FirebaseError as e:
+            print(f"Firebase error: {e}")
+            return Response(
+                {"error": "Failed to send password reset email. Please try again later."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        except Exception as e:
+            print(f"Error: {e}")
+            return Response(
+                {"error": "An unexpected error occurred. Please try again later."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
