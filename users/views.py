@@ -1,8 +1,4 @@
-from django.shortcuts import render
-
 from rest_framework import generics, mixins
-from rest_framework.generics import GenericAPIView
-from rest_framework.mixins import CreateModelMixin
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
@@ -16,7 +12,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from users.models import Users, UserAddress
-from .serializers import RegisterSerializer
+from .serializers import RegisterSerializer, UserSerializer  # Import the serializer for the user object
 import os  # Import os to access environment variables
 from rest_framework.views import APIView
 
@@ -155,7 +151,6 @@ class LoginView(APIView):
         try:
             # Verify the Firebase ID token
             decoded_token = auth.verify_id_token(id_token)
-            uid = decoded_token.get("uid")
             email = decoded_token.get("email")
 
             # Check if the user exists in the database
@@ -169,22 +164,30 @@ class LoginView(APIView):
 
             # Generate JWT tokens for the user
             refresh = RefreshToken.for_user(user)
+
+            # Save user session in the backend
+            request.session["user_id"] = user.id
+            request.session["email"] = user.email
+            request.session["is_authenticated"] = True
+
+            # Serialize the user object
+            user_data = UserSerializer(user).data
+
             return Response(
                 {
                     "message": "Login successful",
                     "refresh": str(refresh),
                     "access": str(refresh.access_token),
+                    "user": user_data,
                 },
                 status=status.HTTP_200_OK,
             )
         except FirebaseError as e:
-            print(f"Firebase error: {e}")
             return Response(
                 {"error": "Invalid ID token."},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
         except Exception as e:
-            print(f"Error: {e}")
             return Response(
                 {"error": "An unexpected error occurred."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,

@@ -23,4 +23,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.orgnisations.set(orgnisations)
         
         return user
-    
+
+
+# Define the UserSerializer
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Users  # Use your custom Users model
+        fields = ['id', 'username', 'email', 'phone', 'orgnisations']  # Include fields you want to expose
+        depth = 1  # Use depth to include related fields like organisations
