@@ -8,3 +8,5 @@ PyJWT==2.9.0
 firebase-admin
 Pillow==11.2.1
 django-cors-headers==4.7.0
+django-redis==5.4.0
+redis==6.2.0
