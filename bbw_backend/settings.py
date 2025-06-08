@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     # // Custom apps
     'orgnisations',
     'users',
+    'shop',
 
     # // Third-party apps
     'rest_framework',
