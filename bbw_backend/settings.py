@@ -82,8 +82,8 @@ INSTALLED_APPS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        # 'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'users.authentication.FirebaseAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        # 'users.authentication.FirebaseAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
@@ -102,26 +102,30 @@ SIMPLE_JWT = {
     'TOKEN_TYPE_CLAIM': 'token_type',
 }
 
-
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "users.middleware.AuthenticationMiddleware",
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
 ROOT_URLCONF = 'bbw_backend.urls'
 
 # // Emao; sends
 # CORS Configuration
+# CORS_ALLOWED_ORIGINS = [
+#     os.getenv("FRONT_END_URL", "http://localhost:3000"),  # Default to localhost:3000
+#     os.getenv("ADMIN_FRONT_END_URL", "http://localhost:5173"),  # Default to localhost:5173
+# ]
+
 CORS_ALLOWED_ORIGINS = [
-    os.getenv("FRONT_END_URL", "http://localhost:3000"),  # Default to localhost:3000
-    os.getenv("ADMIN_FRONT_END_URL", "http://localhost:5173"),  # Default to localhost:5173
+    "http://localhost:3000",  # Frontend URL
+    "http://localhost:5173",  # Admin Frontend URL
 ]
 
 CORS_ALLOW_CREDENTIALS = True

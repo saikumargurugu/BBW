@@ -1,5 +1,5 @@
 import random
-from shop.models import Brand, ProductType, SubCategory, Category, Color, Product
+from shop.models import Brand, ProductType, SubCategory, Category, Color, Product, ProductImage
 
 def populate_mock_data():
     # Create Brands
@@ -37,7 +37,7 @@ def populate_mock_data():
         Color.objects.get_or_create(name=color_name)
 
     # Create Products
-    for _ in range(50):  # Generate 50 products
+    for _ in range(50):
         name = f"Product {_}"
         brand = random.choice(Brand.objects.all())
         category = random.choice(Category.objects.all())
@@ -64,6 +64,12 @@ def populate_mock_data():
         if created:
             # Add random colors to the product only if it was newly created
             product.colors.set(random.sample(list(Color.objects.all()), random.randint(1, 3)))
+            # Add random images to the product
+            for i in range(random.randint(1, 4)):
+                ProductImage.objects.create(
+                    product=product,
+                    image_url=f"https://picsum.photos/seed/{name}-{i}/400/400"
+                )
 
     print("Mock data populated successfully!")
 
