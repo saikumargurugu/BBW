@@ -4,12 +4,24 @@ from firebase_admin import auth
 from orgnisations.models import Organisation
 
 
+class Router(models.Model):
+    url = models.CharField(max_length=255)
+    label = models.CharField(max_length=100)
+    is_auth_route = models.BooleanField(default=False)
+    is_admin = models.BooleanField(default=False)
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name="routers", null=True, blank=True)  # Link to Organisation
+    is_global = models.BooleanField(default=False)  # Flag to indicate if the route is global
+    sort = models.PositiveIntegerField(default=0)  # Field to control the order of routes
+
+    def __str__(self):
+        return f"{self.label} ({self.url})"
+
 class Users(AbstractUser):
     """
     Custom user model extending AbstractUser to include additional fields.
     """
     phone = models.CharField(max_length=15, blank=True, null=True)
-    email = models.EmailField(unique=True)
+    email = models.EmailField(unique=True)  
     orgnisations = models.ManyToManyField(Organisation, blank=True)
     is_active = models.BooleanField(default=True)
     firebase_uid = models.CharField(max_length=128, blank=True, null=True)  # Store Firebase UID

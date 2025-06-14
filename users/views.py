@@ -11,24 +11,25 @@ from django.contrib.auth import get_user_model
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from users.models import Users, UserAddress
+from users.models import Users, UserAddress, Router
 from .serializers import RegisterSerializer, UserSerializer  # Import the serializer for the user object
 import os  # Import os to access environment variables
 from rest_framework.views import APIView
 
+
 Users = get_user_model()
 
 
-class FirebaseAuthView(generics.GenericAPIView):
-    def post(self, request):
-        id_token = request.data.get("idToken")
-        try:
-            from firebase_admin import auth
-            decoded_token = auth.verify_id_token(id_token)
-            uid = decoded_token["uid"]
-            return Response({"message": "Authentication successful", "uid": uid})
-        except Exception as e:
-            return Response({"error": str(e)}, status=401)
+# class FirebaseAuthView(generics.GenericAPIView):
+#     def post(self, request):
+#         id_token = request.data.get("idToken")
+#         try:
+#             from firebase_admin import auth
+#             decoded_token = auth.verify_id_token(id_token)
+#             uid = decoded_token["uid"]
+#             return Response({"message": "Authentication successful", "uid": uid})
+#         except Exception as e:
+#             return Response({"error": str(e)}, status=401)
 
 
 class UserManagementView(mixins.CreateModelMixin, generics.GenericAPIView):
@@ -141,7 +142,7 @@ class LoginView(APIView):
 
     def post(self, request, *args, **kwargs):
         id_token = request.data.get("idToken")
-
+        print(f"Received ID token: {id_token}")  # Debugging log
         if not id_token:
             return Response(
                 {"error": "ID token is required."},
@@ -151,7 +152,15 @@ class LoginView(APIView):
         try:
             # Verify the Firebase ID token
             decoded_token = auth.verify_id_token(id_token)
+            print(f"Decoded Firebase token: {decoded_token}")  # Debugging log
+
             email = decoded_token.get("email")
+            print(f"Decoded email: {email}")  # Debugging log
+            if not email:
+                return Response(
+                    {"error": "Invalid token. Email claim is missing."},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
 
             # Check if the user exists in the database
             try:
@@ -164,11 +173,6 @@ class LoginView(APIView):
 
             # Generate JWT tokens for the user
             refresh = RefreshToken.for_user(user)
-
-            # Save user session in the backend
-            request.session["user_id"] = user.id
-            request.session["email"] = user.email
-            request.session["is_authenticated"] = True
 
             # Serialize the user object
             user_data = UserSerializer(user).data
@@ -183,11 +187,13 @@ class LoginView(APIView):
                 status=status.HTTP_200_OK,
             )
         except FirebaseError as e:
+            print(f"Firebase error: {e}")  # Debugging log
             return Response(
-                {"error": "Invalid ID token."},
+                {"error": f"Invalid ID token. {str(e)}"},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
         except Exception as e:
+            print(f"Unexpected error: {e}")  # Debugging log
             return Response(
                 {"error": "An unexpected error occurred."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -331,3 +337,33 @@ class ForgotPasswordView(APIView):
                 {"error": "An unexpected error occurred. Please try again later."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+
+class LayoutPropsView(APIView):
+    """
+    API to return navigation links and footer text using the Router model.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        
+        if request.user.is_anonymous:
+            # If the user is not authenticated, set is_authenticated to False
+            user_is_authenticated = False
+        else:
+            user_is_authenticated = getattr(request.user, "is_authenticated", False)
+
+        if user_is_authenticated:
+            routers = Router.objects.filter(is_auth_route=True).order_by('id')
+        else:
+            routers = Router.objects.filter(is_auth_route=False).order_by('id')
+
+        nav_links = [
+            {"label": router.label, "href": router.url}
+            for router in routers
+        ]
+        layOutProps = {
+            "navLinks": nav_links,
+            "fotterText": "© 2025 Badminton Association. All rights reserved.",
+        }
+        return Response(layOutProps)
