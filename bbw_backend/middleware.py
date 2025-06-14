@@ -6,6 +6,7 @@ class CustomJWTMiddleware(MiddlewareMixin):
     """
     def process_request(self, request):
         # Example: Add custom logic for incoming requests
+        print(f"Request Method: {request.method}, Request Path: {request.path}")
         if 'Authorization' in request.headers:
             token = request.headers['Authorization']
             print(f"JWT Token: {token}")

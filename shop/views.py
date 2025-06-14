@@ -9,11 +9,13 @@ from shop.serializers import (
     SubCategorySerializer,
     ColorSerializer,
 )
+from shop.pagination import ProductPagination
 
 # List and Create API for Products
 class ProductListCreateView(generics.ListCreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    pagination_class = ProductPagination
 
 # Detail API for Products
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):

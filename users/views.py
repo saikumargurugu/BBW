@@ -11,10 +11,11 @@ from django.contrib.auth import get_user_model
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from users.models import Users, UserAddress
+from users.models import Users, UserAddress, Router
 from .serializers import RegisterSerializer, UserSerializer  # Import the serializer for the user object
 import os  # Import os to access environment variables
 from rest_framework.views import APIView
+
 
 Users = get_user_model()
 
@@ -336,3 +337,33 @@ class ForgotPasswordView(APIView):
                 {"error": "An unexpected error occurred. Please try again later."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+
+class LayoutPropsView(APIView):
+    """
+    API to return navigation links and footer text using the Router model.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        
+        if request.user.is_anonymous:
+            # If the user is not authenticated, set is_authenticated to False
+            user_is_authenticated = False
+        else:
+            user_is_authenticated = getattr(request.user, "is_authenticated", False)
+
+        if user_is_authenticated:
+            routers = Router.objects.filter(is_auth_route=True).order_by('id')
+        else:
+            routers = Router.objects.filter(is_auth_route=False).order_by('id')
+
+        nav_links = [
+            {"label": router.label, "href": router.url}
+            for router in routers
+        ]
+        layOutProps = {
+            "navLinks": nav_links,
+            "fotterText": "© 2025 Badminton Association. All rights reserved.",
+        }
+        return Response(layOutProps)
