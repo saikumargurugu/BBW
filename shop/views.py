@@ -8,6 +8,7 @@ from shop.serializers import (
     CategorySerializer,
     SubCategorySerializer,
     ColorSerializer,
+    ProductDetailSerializer,  # if you want to use it for detail
 )
 from shop.pagination import ProductPagination
 
@@ -17,13 +18,23 @@ class ProductListCreateView(generics.ListCreateAPIView):
     serializer_class = ProductSerializer
     pagination_class = ProductPagination
 
-# Detail API for Products
-class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
+# Create API for Products (separate endpoint, if needed)
+class ProductCreateView(generics.CreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
 
+# Detail API for Products
+class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer  # or ProductDetailSerializer
+
 # List and Create API for Brands
 class BrandListCreateView(generics.ListCreateAPIView):
+    queryset = Brand.objects.all()
+    serializer_class = BrandSerializer
+
+# Create API for Brands (separate endpoint, if needed)
+class BrandCreateView(generics.CreateAPIView):
     queryset = Brand.objects.all()
     serializer_class = BrandSerializer
 
