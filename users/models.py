@@ -28,6 +28,8 @@ class Users(AbstractUser):
     date_of_birth = models.DateField(blank=True, null=True)  # Optional field for DOB
     address = models.TextField(blank=True, null=True)  # Optional field for address
     profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)  # Profile picture
+    is_admin = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)  # Profile picture
+    is_staff = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)  # Profile picture
 
     def __str__(self):
         return self.username
