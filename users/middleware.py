@@ -20,6 +20,8 @@ class AuthenticationMiddleware(MiddlewareMixin):
             "/api/token/refresh/",
             "/api/user/signup/",
             "/api/user/forgot-password/",
+            "/api/admin-ui/token/refresh/", 
+            "/api/admin-ui/auth/login/",
         ]
 
         auth_header = request.headers.get("Authorization")
@@ -42,6 +44,12 @@ class AuthenticationMiddleware(MiddlewareMixin):
             try:
                 user = Users.objects.get(id=user_id)
                 request.user = user
+
+                # Admin API check
+                if request.path.startswith("/api/admin-ui"):
+                    if not (user.is_staff or user.is_superuser):
+                        return JsonResponse({"error": "Unauthorized. Admin access required."}, status=401)
+
             except ExpiredSignatureError:
                 print("Token has expired.")
                 return JsonResponse({"error": "Unauthorized. Token has expired."}, status=401)

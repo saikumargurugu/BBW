@@ -33,4 +33,8 @@ urlpatterns = [
     path('api/user/', include('users.urls_noauth')),
     # Include shop app APIs
     path('api/public/shop/', include('shop.urls')),
+    
+    #admin-ui apis
+    path('api/admin-ui/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/admin-ui/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
