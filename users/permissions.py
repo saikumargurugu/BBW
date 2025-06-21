@@ -19,6 +19,16 @@ class IsAdminUser(BasePermission):
         return request.user and request.user.is_authenticated and request.user.is_staff
 
 
+class IsStaffUser(BasePermission):
+    """
+    Allows access only to admin users.
+    """
+
+    def has_permission(self, request, view):
+        return request.user and request.user.is_authenticated and (request.user.is_staff or request.user.is_admin)
+
+
+
 class IsInactiveAuthenticatedUser(BasePermission):
     """
     Allows access only to authenticated users who are inactive.

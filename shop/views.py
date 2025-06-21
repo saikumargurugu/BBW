@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from rest_framework import generics
 from shop.models import Product, Brand, ProductType, Category, SubCategory, Color
+from users.permissions import IsAdminUser  
 from shop.serializers import (
     ProductSerializer,
     BrandSerializer,
@@ -22,6 +23,7 @@ class ProductListCreateView(generics.ListCreateAPIView):
 class ProductCreateView(generics.CreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    permission_classes = [IsAdminUser]  # Assuming you have a custom permission class for admin users
 
 # Detail API for Products
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -37,6 +39,7 @@ class BrandListCreateView(generics.ListCreateAPIView):
 class BrandCreateView(generics.CreateAPIView):
     queryset = Brand.objects.all()
     serializer_class = BrandSerializer
+    permission_classes = [IsAdminUser] 
 
 # Detail API for Brands
 class BrandDetailView(generics.RetrieveUpdateDestroyAPIView):
