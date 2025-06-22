@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from rest_framework import viewsets
 from rest_framework import generics
 from shop.models import Product, Brand, ProductType, Category, SubCategory, Color
 from users.permissions import IsAdminUser  
@@ -7,9 +8,8 @@ from shop.serializers import (
     BrandSerializer,
     ProductTypeSerializer,
     CategorySerializer,
-    SubCategorySerializer,
-    ColorSerializer,
-    ProductDetailSerializer,  # if you want to use it for detail
+    ProductAdminListSerializer,
+    ProductAdminDetailSerializer,
 )
 from shop.pagination import ProductPagination
 
@@ -19,11 +19,6 @@ class ProductListCreateView(generics.ListCreateAPIView):
     serializer_class = ProductSerializer
     pagination_class = ProductPagination
 
-# Create API for Products (separate endpoint, if needed)
-class ProductCreateView(generics.CreateAPIView):
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-    permission_classes = [IsAdminUser]  # Assuming you have a custom permission class for admin users
 
 # Detail API for Products
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -55,3 +50,29 @@ class CategoryListCreateView(generics.ListCreateAPIView):
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+
+
+
+
+
+
+
+# Create API for Products (separate endpoint, if needed)
+#  ADMIN APIS for Product Creation
+
+class ProductCreateView(generics.CreateAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = [IsAdminUser] 
+
+
+class ProductAdminViewSet(viewsets.ModelViewSet):
+    queryset = Product.objects.all()
+    serializer_class = ProductAdminListSerializer  # Assuming you have a serializer for admin view
+    pagination_class = ProductPagination
+    permission_classes = [IsAdminUser] 
+
+    def get_serializer_class(self):
+        if self.action == 'retrieve':
+            return ProductAdminDetailSerializer  
+        return ProductAdminListSerializer 

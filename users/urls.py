@@ -9,4 +9,5 @@ urlpatterns = [
     path("api/layout-props/", LayoutPropsView.as_view(), name="layout-props"),
     path('signup/', SignUpView.as_view(), name='signup'),
     path('forgot-password/', ForgotPasswordView.as_view(), name='forgot-password'),
+    
 ]

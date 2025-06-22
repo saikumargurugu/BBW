@@ -50,6 +50,7 @@ class Product(models.Model):
     product_type = models.ForeignKey(ProductType, on_delete=models.SET_NULL, related_name="products", null=True)
     colors = models.ManyToManyField(Color, related_name="products")  
     qty = models.PositiveIntegerField(default=0) 
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0) 
     product_details = RichTextField()  # Use RichTextField for formatted text
     in_stock = models.BooleanField(default=True) 
     discount = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True) 

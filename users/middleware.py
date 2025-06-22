@@ -21,13 +21,14 @@ class AuthenticationMiddleware(MiddlewareMixin):
             "/api/user/signup/",
             "/api/user/forgot-password/",
             "/api/admin-ui/token/refresh/", 
-            "/api/admin-ui/auth/login/",
+            "/api/admin-ui/login/",
+            "/api/admin-ui/auth/token/", 
         ]
 
         auth_header = request.headers.get("Authorization")
         print("================req path====================")
         print(f"Request path: {request.path}")
-        print(f"Authorization header: {auth_header}")
+        # print(f"Authorization header: {auth_header}")
 
         if not auth_header and auth_header is None:
             if request.path.startswith("/api/public") or request.path in specific_public_paths:
@@ -37,7 +38,7 @@ class AuthenticationMiddleware(MiddlewareMixin):
 
         try:
             token = auth_header.split(" ")[1]
-            print(f"Extracted token: {token}")
+            # print(f"Extracted token: {token}")
             access_token = AccessToken(token)
             user_id = access_token["user_id"]
             print(f"User ID from token: {user_id}")
