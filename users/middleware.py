@@ -20,9 +20,9 @@ class AuthenticationMiddleware(MiddlewareMixin):
             "/api/token/refresh/",
             "/api/user/signup/",
             "/api/user/forgot-password/",
-            "/api/admin-ui/token/refresh/", 
             "/api/admin-ui/login/",
             "/api/admin-ui/auth/token/", 
+            "/api/admin-ui/auth/token/refresh/"
         ]
 
         auth_header = request.headers.get("Authorization")
