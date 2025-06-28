@@ -33,7 +33,8 @@ if not SECRET_KEY:
     raise ValueError("The SECRET_KEY environment variable is not set!")
 
 # Add the project root to PYTHONPATH
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 sys.path.append(BASE_DIR)
 initialize_firebase()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -52,11 +53,8 @@ ALLOWED_HOSTS = []
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-# FIREBASE_CREDENTIALS = os.getenv("FIREBASE_CREDENTIALS")
-# cred = credentials.Certificate(FIREBASE_CREDENTIALS)
-# firebase_admin.initialize_app(cred)
-
-# Application definition
+MEDIA_ROOT = BASE_DIR / 'media'
+STATIC_ROOT = BASE_DIR / 'static'
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -71,7 +69,8 @@ INSTALLED_APPS = [
     'orgnisations',
     'users',
     'shop',
-
+    'admin_api',
+    
     # // Third-party apps
     'rest_framework',
     'rest_framework_simplejwt',
@@ -137,6 +136,10 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+]
 
 
 # reddis cache
@@ -252,3 +255,15 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]

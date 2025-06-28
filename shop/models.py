@@ -50,6 +50,7 @@ class Product(models.Model):
     product_type = models.ForeignKey(ProductType, on_delete=models.SET_NULL, related_name="products", null=True)
     colors = models.ManyToManyField(Color, related_name="products")  
     qty = models.PositiveIntegerField(default=0) 
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0) 
     product_details = RichTextField()  # Use RichTextField for formatted text
     in_stock = models.BooleanField(default=True) 
     discount = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True) 
@@ -61,6 +62,7 @@ class Product(models.Model):
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images")
     image_url = models.URLField(max_length=500)
+    upload_id = models.PositiveIntegerField(null=True, blank=True)  # New upload ID field
 
     def __str__(self):
         return f"Image for {self.product.name}"

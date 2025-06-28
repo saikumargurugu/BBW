@@ -1,17 +1,19 @@
 from django.shortcuts import render
+from rest_framework import viewsets
 from rest_framework import generics
-from shop.models import Product, Brand, ProductType, Category, SubCategory, Color
+from shop.models import Product, Brand, ProductType, Category, SubCategory, Color, ProductImage
 from users.permissions import IsAdminUser  
 from shop.serializers import (
     ProductSerializer,
     BrandSerializer,
     ProductTypeSerializer,
     CategorySerializer,
-    SubCategorySerializer,
-    ColorSerializer,
-    ProductDetailSerializer,  # if you want to use it for detail
+    ProductAdminListSerializer,
+    ProductAdminDetailSerializer,
 )
 from shop.pagination import ProductPagination
+from rest_framework import status
+from rest_framework.response import Response
 
 # List and Create API for Products
 class ProductListCreateView(generics.ListCreateAPIView):
@@ -19,11 +21,6 @@ class ProductListCreateView(generics.ListCreateAPIView):
     serializer_class = ProductSerializer
     pagination_class = ProductPagination
 
-# Create API for Products (separate endpoint, if needed)
-class ProductCreateView(generics.CreateAPIView):
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-    permission_classes = [IsAdminUser]  # Assuming you have a custom permission class for admin users
 
 # Detail API for Products
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -55,3 +52,9 @@ class CategoryListCreateView(generics.ListCreateAPIView):
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+
+
+
+
+
+

@@ -23,8 +23,8 @@ class Organisation(models.Model):
 
 
 
-    website="http://defaultorganisation.com"
     def create_default_organisation():
+        website="http://defaultorganisation.com"
         Organisation.objects.get_or_create(
             name="Default Organisation",
             address="123 Default St, Default City, Default Country",
@@ -32,4 +32,3 @@ class Organisation(models.Model):
             email="saikg.dev@gmail.com",
             website=website
         )
-        
