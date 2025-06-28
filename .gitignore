@@ -19,6 +19,7 @@ firebase_credentials.json
 /static/
 staticfiles/
 media/
+bbw_backend/static/
 
 # Django migrations (optional to ignore per app)
 /**/migrations/
