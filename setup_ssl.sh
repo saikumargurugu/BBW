@@ -34,6 +34,10 @@ http {
         location /static/ {
             alias /code/static/;
         }
+
+        location /media/ {
+            alias /code/media/;
+        }
     }
 
     server {
