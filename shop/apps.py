@@ -16,6 +16,6 @@ class ShopConfig(AppConfig):
 
             def run_mock_data(sender, **kwargs):
                 print("Running mock data population...")
-                populate_mock_data()
+                # populate_mock_data()
 
             post_migrate.connect(run_mock_data, sender=self)
