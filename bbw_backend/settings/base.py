@@ -214,6 +214,13 @@ DATABASES = {
     }
 }
 
+print("DATABASE CONFIGURATION:")
+print(f"ENGINE: {DATABASES['default']['ENGINE']}")
+print(f"NAME: {DATABASES['default']['NAME']}")
+print(f"USER: {DATABASES['default']['USER']}")
+print(f"HOST: {DATABASES['default']['HOST']}")
+print(f"PORT: {DATABASES['default']['PORT']}")
+
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
