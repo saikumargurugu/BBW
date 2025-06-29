@@ -38,7 +38,7 @@ def populate_mock_data():
 
     # Create Products
     for _ in range(50):
-        name = f"Product {_}"
+        name = f"yonex ASTROX 4u 5g {_}"
         brand = random.choice(Brand.objects.all())
         category = random.choice(Category.objects.all())
         product_type = random.choice(ProductType.objects.all())
