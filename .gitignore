@@ -22,7 +22,7 @@ media/
 bbw_backend/static/
 
 # Django migrations (optional to ignore per app)
-/**/migrations/
+# /**/migrations/
 !*/migrations/__init__.py
 
 # Secrets
