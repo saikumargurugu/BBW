@@ -8,7 +8,7 @@ def main():
     """Run administrative tasks."""
     from dotenv import load_dotenv
     load_dotenv()
-    DJANGO_SETTINGS_MODULE = os.environ.get('DJANGO_SETTINGS_MODULE', 'bbw_backend.settings')
+    DJANGO_SETTINGS_MODULE = os.environ.get('DJANGO_SETTINGS_MODULE', 'bbw_backend.settings.base')
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', DJANGO_SETTINGS_MODULE)
     try:
         from django.core.management import execute_from_command_line
